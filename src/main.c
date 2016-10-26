@@ -42,9 +42,9 @@ period *read(FILE *src)
             current->balls + 6
         );
         if (readcount == EOF) break;    // reached file end
-        if (readcount != 9) {
+        if (readcount != 9) {           // entered malformed line
             fprintf(stderr, "encounted file read error at line %d", dataset_current_index);
-            continue;   // entered malformed line
+            exit(EXIT_FAILURE);
         }
         ++dataset_current_index;
     }
