@@ -4,7 +4,9 @@
 #include <math.h>
 
 #define DATASET_BUFFER_LENGTH 16
-#define MAGIC_NUMBER 0.381966011
+
+// (3 - √5) / 2
+#define MAGIC_NUMBER 0.38196601125
 
 typedef struct period {
     char period[8];
@@ -57,9 +59,26 @@ void predict(period *data, period *prediction) {
     double probability_matrix[6][2] = {{1, 33}, {1, 33}, {1, 33}, {1, 33}, {1, 33}, {1, 33}};
     int max_index = 0;
     while(data[++max_index].ballset);
-    for (int i = max_index - 1; i >= 0; --i) { // foreach data in data desc
+    for (int i = max_index - 1; i >= 0; --i) { // foreach data in data descend (so more recent data will have more influence)
         for (int j = 0; j < 6; ++j) {   // foreach position
             // refine new border in probability_matrix[j]
+            /*
+                均衡器法：一种魔改的折纸法
+
+                原理：
+                    0. 所有数字的出现是随机分布的
+                    1. 对任何数字 X，X 和临近 X 的两三个数字被选中的可能性都小于其余数字被选中的可能性之和
+                    2. 如果某一次出现了数字 X，那么接下来一段时间内出现 X（以及临近 X 的几个数）的概率就会相对小一些
+
+                方法：
+                    0. 把有效范围 1-33 划分为三个部分：可能性较大的中间区域和可能性较小的左右两侧
+                    |1--------------L---------------------------R--------------33|
+                                    ^                           ^
+                    1. L 初始值为 1，R 初始值为 33
+                    2. 如果已有数据落在 L 和 R 之间，那么基于原理 1，让靠近它的端点远离它一点
+                    3. 如果已有数据里面出现在 L 左侧或者 R 右侧，说明目前的最大可能性范围有点小了，所以让靠近它的端点更靠近它一点
+
+            */
             double segment_length = probability_matrix[j][1] - probability_matrix[j][0];
             double cut_length = segment_length * MAGIC_NUMBER;
 
