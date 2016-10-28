@@ -23,7 +23,7 @@ period *read(FILE *src)
     while (true) {
         // expand dataset if needed
         if (dataset_size == dataset_current_index) {
-            d = realloc(d, dataset_size += DATASET_BUFFER_LENGTH * sizeof(period));
+            d = realloc(d, (dataset_size += DATASET_BUFFER_LENGTH) * sizeof(period));
             if (!d) {
                 fprintf(stderr, "memory allocation failed\n");
                 exit(EXIT_FAILURE);
