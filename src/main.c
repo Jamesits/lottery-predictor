@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <math.h>
+#include <time.h>
 
 #define DATASET_BUFFER_LENGTH 16
 
@@ -23,7 +24,7 @@ period *read(FILE *src)
     while (true) {
         // expand dataset if needed
         if (dataset_size == dataset_current_index) {
-            d = realloc(d, (dataset_size += DATASET_BUFFER_LENGTH) * sizeof(period));
+            d = (period *)realloc(d, (dataset_size += DATASET_BUFFER_LENGTH) * sizeof(period));
             if (!d) {
                 fprintf(stderr, "memory allocation failed\n");
                 exit(EXIT_FAILURE);
@@ -57,8 +58,27 @@ period *read(FILE *src)
 void predict(period *data, period *prediction) {
     // let's assume data is entered in date ascend sequence
     double probability_matrix[6][2] = {{1, 33}, {1, 33}, {1, 33}, {1, 33}, {1, 33}, {1, 33}};
+    double average[6] = {0};
+    double stddev[6] = {0};
     int max_index = 0;
     while(data[++max_index].ballset);
+    
+    for (int i = max_index - 1; i >= 0; --i) {
+	    for (int j = 0; j < 6; ++j) {
+		    average[j] += data[i].balls[j];
+	    }
+    }
+    for (int i = 0; i < 6; ++i) average[i] /= max_index;
+    
+    for (int i = max_index - 1; i >= 0; --i) {
+	    for (int j = 0; j < 6; ++j) {
+		    stddev[j] += pow(data[i].balls[j] - average[j], 2);
+	    }
+    }
+    for (int i = 0; i < 6; ++i) {
+	    stddev[i] = sqrt(stddev[i] / (max_index - 1));
+    }
+
     for (int i = max_index - 1; i >= 0; --i) { // foreach data in data descend (so more recent data will have more influence)
         for (int j = 0; j < 6; ++j) {   // foreach position
             // refine new border in probability_matrix[j]
@@ -109,9 +129,27 @@ void predict(period *data, period *prediction) {
         if (prediction->balls[i] < 1) prediction->balls[i] = 1;
         if (prediction->balls[i] > 33) prediction->balls[i] = 33;
     }
+
+    // avoid collision
+    for (int i = 0; i < 6; ++i) {
+        for (int j = i + 1; j < 6; ++j) {
+		if (prediction->balls[i] == prediction->balls[j]) {
+			int direction = rand() >= 0.5 ? -1 : 1;
+			prediction->balls[j] = (int)(prediction->balls[j] + direction * stddev[j] - direction * 1) % 33 + direction * 1;
+		}
+	}
+    }
+
+    // print debug information
+    printf("Predictor information\n");
+    printf("ball\taverage\t\tstddev\t\trmin\t\trmax\t\trcenter\n");
+    for (int i = 0; i < 6; ++i) {
+	    printf("%d\t%lf\t%lf\t%lf\t%lf\t%d\n", i + 1, average[i], stddev[i], probability_matrix[i][0], probability_matrix[i][1], (int)((probability_matrix[i][0] + probability_matrix[i][1]) / 2));
+    }
 }
 
 int main(void) {
+    srand(time(NULL));
     // open file
     FILE *input;
     input = fopen("./input.txt", "r");
