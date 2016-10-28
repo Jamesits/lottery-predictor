@@ -147,7 +147,7 @@ void predict(period *data, period *prediction) {
     printf("Predictor information\n");
     printf("ball\taverage\t\tstddev\t\trmin\t\trmax\t\trcenter\n");
     for (int i = 0; i < 6; ++i) {
-	    printf("%d\t%lf\t%lf\t%lf\t%lf\t%d\n", i + 1, average[i], stddev[i], probability_matrix[i][0], probability_matrix[i][1], (int)((probability_matrix[i][0] + probability_matrix[i][1]) / 2));
+	    printf("%d\t%lf\t%lf\t%lf\t%lf\t%d\n", i + 1, average[i], stddev[i], probability_matrix[i][0], probability_matrix[i][1], (int)round((probability_matrix[i][0] + probability_matrix[i][1]) / 2));
     }
 }
 
