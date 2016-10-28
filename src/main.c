@@ -133,9 +133,12 @@ void predict(period *data, period *prediction) {
     // avoid collision
     for (int i = 0; i < 6; ++i) {
         for (int j = i + 1; j < 6; ++j) {
-		if (prediction->balls[i] == prediction->balls[j]) {
+		while (prediction->balls[i] == prediction->balls[j]) {
 			int direction = rand() >= 0.5 ? -1 : 1;
-			prediction->balls[j] = (int)(prediction->balls[j] + direction * stddev[j] - direction * 1) % 33 + direction * 1;
+			int times = rand() * 3;
+			prediction->balls[j] = (int)(prediction->balls[j] + direction * times * stddev[j] - direction * 1) % 33;
+			if (prediction->balls[j] < 0) prediction->balls[j] += 33;
+			prediction->balls[j] += 1;
 		}
 	}
     }
